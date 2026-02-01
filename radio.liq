@@ -1,14 +1,22 @@
 set("log.stdout", true)
+set("server.telnet", false)
 
-s = playlist(mode="random", reload_mode="watch", "/music")
-s = crossfade(s)
+# Folder-based source (reloads when files change)
+music = playlist(mode="random", reload=60, "/srv/radio/music")
 
+# Safety wrapper so the stream never crashes if a file is weird
+radio = mksafe(music)
+
+# Send to Icecast
 output.icecast(
-  %mp3(bitrate=128),
-  host="icecast",
+  %mp3(bitrate=128, samplerate=44100, stereo=true),
+  host="127.0.0.1",
   port=8000,
-  password="sourcepass_change_me",
-  mount="/stream.mp3",
-  name="Home Radio",
-  s
+  password="CHANGE_ME_SOURCE",
+  mount="stream.mp3",
+  name="My Radio",
+  description="24/7 stream powered by Liquidsoap + Icecast",
+  genre="Radio",
+  url="https://radio.yourdomain.com",
+  radio
 )
