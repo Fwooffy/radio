@@ -3,64 +3,456 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>My Radio</title>
+  <title>📻 My Radio</title>
+  <meta name="description" content="24/7 stream powered by Liquidsoap + Icecast" />
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
-    .card { padding: 20px; border: 1px solid #ddd; border-radius: 12px; }
-    h1 { margin-top: 0; }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .meta { margin-top: 12px; color: #333; }
-    .label { color: #666; font-size: 14px; }
-    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+    :root{
+      --bg: #0b0f19;
+      --card: rgba(255,255,255,.08);
+      --card2: rgba(255,255,255,.06);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.68);
+      --line: rgba(255,255,255,.14);
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 600px at 10% 10%, rgba(120, 80, 255, .35), transparent 55%),
+        radial-gradient(900px 600px at 90% 20%, rgba(0, 200, 255, .25), transparent 55%),
+        radial-gradient(900px 600px at 60% 95%, rgba(0, 255, 170, .18), transparent 55%),
+        linear-gradient(180deg, #070a12, var(--bg));
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px 16px;
+    }
+    .wrap{
+      width: min(980px, 100%);
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 16px;
+    }
+    @media (max-width: 860px){
+      .wrap{ grid-template-columns: 1fr; }
+    }
+    .card{
+      background: linear-gradient(180deg, var(--card), var(--card2));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:-120px -160px auto auto;
+      width: 420px; height: 420px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.14), transparent 60%);
+      transform: rotate(12deg);
+      pointer-events:none;
+    }
+    header{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    h1{
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: .2px;
+    }
+    .tagline{
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .pill{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color: var(--muted);
+      font-size: 13px;
+      user-select:none;
+      white-space: nowrap;
+    }
+    .dot{
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #ff4d4d;
+      box-shadow: 0 0 0 4px rgba(255,77,77,.12);
+    }
+    .dot.on{
+      background: #2bff86;
+      box-shadow: 0 0 0 4px rgba(43,255,134,.12);
+    }
+    .main{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .now{
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(0,0,0,.18);
+    }
+    .label{
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .title{
+      font-size: 18px;
+      line-height: 1.25;
+      margin: 0;
+    }
+    .sub{
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 13px;
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .controls{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .btn{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      padding: 11px 14px;
+      border-radius: 14px;
+      cursor: pointer;
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      transition: transform .06s ease, background .2s ease;
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      background: rgba(43,255,134,.14);
+      border-color: rgba(43,255,134,.35);
+    }
+    .btn svg{ width: 18px; height: 18px; }
+    .slider{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      min-width: 240px;
+      flex: 1;
+    }
+    input[type="range"]{ width: 100%; }
+    .tiny{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .meter{
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      overflow:hidden;
+      background: rgba(0,0,0,.25);
+    }
+    .meter > div{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(43,255,134,.95), rgba(0,200,255,.9), rgba(255,80,190,.9));
+      transition: width .08s linear;
+    }
+
+    .side{
+      display:grid;
+      gap: 16px;
+    }
+    .stats{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .stat{
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+    }
+    .stat .v{
+      font-size: 18px;
+      margin-top: 4px;
+    }
+    a{
+      color: rgba(160, 220, 255, .92);
+      text-decoration: none;
+    }
+    a:hover{ text-decoration: underline; }
+    footer{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   </style>
 </head>
+
 <body>
-  <div class="card">
-    <h1>📻 My Radio</h1>
+  <div class="wrap">
+    <section class="card">
+      <header>
+        <div>
+          <h1>📻 My Radio</h1>
+          <div class="tagline">24/7 stream • powered by Liquidsoap + Icecast • zero ads, maximum vibes</div>
+        </div>
+        <div class="pill" title="Live status">
+          <span id="dot" class="dot"></span>
+          <span id="statusText">checking…</span>
+        </div>
+      </header>
 
-    <div class="row">
-      <button id="playBtn">Play</button>
-      <button id="stopBtn">Stop</button>
+      <div class="main">
+        <div class="now">
+          <div class="label">Now Playing</div>
+          <p id="nowTitle" class="title">Loading…</p>
+          <div class="sub">
+            <span>Mount: <span class="mono">/stream.mp3</span></span>
+            <span>Bitrate: <span id="bitrate">—</span></span>
+            <span>Listeners: <span id="listenersInline">—</span></span>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="label">Signal</div>
+            <div class="meter" aria-label="Audio activity meter">
+              <div id="meterFill"></div>
+            </div>
+            <div class="tiny" style="margin-top:8px;">
+              Tip: mobile browsers often require a tap before audio can play. Blame physics. Or Apple. Mostly physics.
+            </div>
+          </div>
+        </div>
 
-      <audio id="player" preload="none" controls style="flex: 1; min-width: 260px;">
-        <source src="https://radio.yourdomain.com/stream.mp3" type="audio/mpeg">
-      </audio>
-    </div>
+        <div class="controls">
+          <button id="playBtn" class="btn primary">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z"></path>
+            </svg>
+            <span>Play</span>
+          </button>
 
-    <div class="meta">
-      <div class="label">Now playing</div>
-      <div id="nowPlaying">Loading…</div>
-    </div>
+          <button id="stopBtn" class="btn">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M6 6h12v12H6z"></path>
+            </svg>
+            <span>Stop</span>
+          </button>
+
+          <div class="slider" title="Volume">
+            <span class="tiny">Vol</span>
+            <input id="vol" type="range" min="0" max="1" step="0.01" value="0.85" />
+            <span id="volLabel" class="tiny mono">0.85</span>
+          </div>
+        </div>
+
+        <audio id="player" preload="none" crossorigin="anonymous">
+          <source src="/stream.mp3" type="audio/mpeg">
+        </audio>
+
+        <footer>
+          <span>Admin-ish: <a href="/status-json.xsl" target="_blank" rel="noopener">status-json.xsl</a></span>
+          <span class="mono" id="debug"></span>
+        </footer>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="card">
+        <div class="label">Station Stats</div>
+        <div class="stats">
+          <div class="stat">
+            <div class="tiny">Listeners</div>
+            <div id="listeners" class="v">—</div>
+          </div>
+          <div class="stat">
+            <div class="tiny">Stream Type</div>
+            <div id="stype" class="v">—</div>
+          </div>
+          <div class="stat">
+            <div class="tiny">Server</div>
+            <div id="serverName" class="v">—</div>
+          </div>
+          <div class="stat">
+            <div class="tiny">Last Update</div>
+            <div id="updated" class="v">—</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="label">How to tune in</div>
+        <p style="margin:6px 0 0; color: var(--muted); line-height:1.5;">
+          You can also paste this into VLC, iTunes, Winamp (yes, it still whips), or whatever audio thing you swear by:
+        </p>
+        <p class="mono" style="margin:10px 0 0; padding:12px; border:1px solid var(--line); border-radius:14px; background: rgba(0,0,0,.18);">
+          https://YOUR-DOMAIN-HERE/stream.mp3
+        </p>
+        <p class="tiny" style="margin-top:10px;">
+          Replace <span class="mono">YOUR-DOMAIN-HERE</span> with your actual domain. Future you will thank present you.
+        </p>
+      </section>
+    </aside>
   </div>
 
   <script>
-    const player = document.getElementById('player');
+    const audio = document.getElementById('player');
     const playBtn = document.getElementById('playBtn');
     const stopBtn = document.getElementById('stopBtn');
-    const nowPlaying = document.getElementById('nowPlaying');
+    const vol = document.getElementById('vol');
+    const volLabel = document.getElementById('volLabel');
 
-    playBtn.onclick = () => player.play();
-    stopBtn.onclick = () => { player.pause(); player.currentTime = 0; };
+    const dot = document.getElementById('dot');
+    const statusText = document.getElementById('statusText');
+    const nowTitle = document.getElementById('nowTitle');
 
-    async function fetchNowPlaying() {
+    const listeners = document.getElementById('listeners');
+    const listenersInline = document.getElementById('listenersInline');
+    const bitrate = document.getElementById('bitrate');
+    const stype = document.getElementById('stype');
+    const serverName = document.getElementById('serverName');
+    const updated = document.getElementById('updated');
+    const debug = document.getElementById('debug');
+
+    const meterFill = document.getElementById('meterFill');
+
+    // Volume
+    audio.volume = parseFloat(vol.value);
+    volLabel.textContent = audio.volume.toFixed(2);
+    vol.addEventListener('input', () => {
+      audio.volume = parseFloat(vol.value);
+      volLabel.textContent = audio.volume.toFixed(2);
+    });
+
+    // Controls
+    playBtn.addEventListener('click', async () => {
       try {
-        // Icecast JSON status endpoint:
-        const res = await fetch('https://radio.yourdomain.com/status-json.xsl', { cache: 'no-store' });
+        await audio.play();
+      } catch (e) {
+        // Mobile autoplay / gesture rules
+        console.log(e);
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      audio.pause();
+      // Resetting currentTime on a live stream can throw in some browsers; guard it.
+      try { audio.currentTime = 0; } catch (e) {}
+    });
+
+    // Icecast status polling
+    function pickSource(src) {
+      // icestats.source can be object or array. Choose the mount matching stream.mp3 if possible.
+      if (!src) return null;
+      if (Array.isArray(src)) {
+        return src.find(s => (s.listenurl || "").includes("stream.mp3")) || src[0];
+      }
+      return src;
+    }
+
+    async function fetchStatus() {
+      const t0 = Date.now();
+      try {
+        const res = await fetch('/status-json.xsl', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
-        // Works for common Icecast layouts
-        const src = data?.icestats?.source;
-        const source = Array.isArray(src) ? src.find(s => s.listenurl?.includes('stream.mp3')) : src;
+        const src = pickSource(data?.icestats?.source);
+        const isOn = !!src;
 
-        const title = source?.title || source?.server_name || 'On air';
-        nowPlaying.textContent = title;
+        dot.classList.toggle('on', isOn);
+        statusText.textContent = isOn ? 'ON AIR' : 'offline?';
+        nowTitle.textContent = src?.title || src?.server_name || 'On air';
+
+        const l = src?.listeners ?? 0;
+        listeners.textContent = String(l);
+        listenersInline.textContent = String(l);
+
+        bitrate.textContent = src?.bitrate ? `${src.bitrate} kbps` : '—';
+        stype.textContent = src?.server_type || '—';
+        serverName.textContent = data?.icestats?.server_id || 'Icecast';
+
+        const dt = new Date();
+        updated.textContent = dt.toLocaleTimeString();
+        debug.textContent = `status in ${Date.now() - t0}ms`;
+
       } catch (e) {
-        nowPlaying.textContent = 'On air (metadata unavailable)';
+        dot.classList.remove('on');
+        statusText.textContent = 'offline?';
+        debug.textContent = 'status fetch failed';
       }
     }
 
-    fetchNowPlaying();
-    setInterval(fetchNowPlaying, 10000);
+    fetchStatus();
+    setInterval(fetchStatus, 10000);
+
+    // Tiny audio activity meter (works once audio is playing and CORS allows it)
+    // This is best-effort; if the browser blocks it, we just keep it idle.
+    (function meter(){
+      let ctx, analyser, data;
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        data = new Uint8Array(analyser.frequencyBinCount);
+
+        const srcNode = ctx.createMediaElementSource(audio);
+        srcNode.connect(analyser);
+        analyser.connect(ctx.destination);
+
+        function tick(){
+          analyser.getByteFrequencyData(data);
+          let sum = 0;
+          for (let i=0; i<data.length; i++) sum += data[i];
+          const avg = sum / data.length;        // 0..255-ish
+          const pct = Math.min(100, Math.max(0, (avg / 255) * 140)); // punch it a bit
+          meterFill.style.width = pct.toFixed(1) + '%';
+          requestAnimationFrame(tick);
+        }
+        tick();
+
+        // Resume context on user gesture if needed
+        playBtn.addEventListener('click', () => {
+          if (ctx.state === 'suspended') ctx.resume().catch(()=>{});
+        });
+
+      } catch (e) {
+        // If it fails (CORS/Autoplay policies), keep the meter calm.
+        meterFill.style.width = '0%';
+      }
+    })();
   </script>
 </body>
 </html>
