@@ -1,10 +1,23 @@
 server {
-  listen 127.0.0.1:80;
-  server_name radio.yourdomain.com;
+  listen 80;
+  server_name _;
 
   root /var/www/radio;
   index index.html;
 
+  # Don't cache the homepage
+  location = / {
+    add_header Cache-Control "no-store";
+    try_files /index.html =404;
+  }
+
+  # Don't cache index.html either
+  location = /index.html {
+    add_header Cache-Control "no-store";
+    try_files /index.html =404;
+  }
+
+  # Everything else (static files)
   location / {
     try_files $uri $uri/ =404;
   }
